@@ -10,6 +10,7 @@ import {
 	convertCfWorkerInitBindingstoBindings,
 	extractBindingsOfType,
 } from "./api/startDevWorker/utils";
+import { getAssetsOptions } from "./assets";
 import { configFileName, formatConfigSnippet } from "./config";
 import { resolveWranglerConfigPath } from "./config/config-helpers";
 import { createCommand } from "./core/create-command";
@@ -20,7 +21,6 @@ import { getVarsForDev } from "./dev/dev-vars";
 import registerDevHotKeys from "./dev/hotkeys";
 import { maybeRegisterLocalWorker } from "./dev/local";
 import { UserError } from "./errors";
-import { run } from "./experimental-flags";
 import isInteractive from "./is-interactive";
 import { logger } from "./logger";
 import { getLegacyAssetPaths, getSiteAssetPaths } from "./sites";
@@ -59,6 +59,11 @@ import type { Json } from "miniflare";
 export const dev = createCommand({
 	behaviour: {
 		provideConfig: false,
+		overrideExperimentalFlags: (args) => ({
+			FILE_BASED_REGISTRY: args.experimentalRegistry,
+			MULTIWORKER: Array.isArray(args.config),
+			RESOURCES_PROVISION: args.experimentalProvision ?? false,
+		}),
 	},
 	metadata: {
 		description: "👂 Start a local server for developing your Worker",
@@ -373,14 +378,7 @@ export const dev = createCommand({
 		}
 	},
 	async handler(args) {
-		const devInstance = await run(
-			{
-				FILE_BASED_REGISTRY: args.experimentalRegistry,
-				MULTIWORKER: Array.isArray(args.config),
-				RESOURCES_PROVISION: false,
-			},
-			() => startDev(args)
-		);
+		const devInstance = await startDev(args);
 		assert(devInstance.devEnv !== undefined);
 		await events.once(devInstance.devEnv, "teardown");
 		await Promise.all(devInstance.secondary.map((d) => d.teardown()));
@@ -871,9 +869,7 @@ export async function getHostAndRoutes(
 				routes?: Extract<Trigger, { type: "route" }>[];
 				assets?: string;
 		  },
-	config: Pick<Config, "route" | "routes" | "assets"> & {
-		dev: Pick<Config["dev"], "host">;
-	}
+	config: Config
 ) {
 	// TODO: if worker_dev = false and no routes, then error (only for dev)
 	// Compute zone info from the `host` and `route` args and config;
@@ -894,7 +890,8 @@ export async function getHostAndRoutes(
 		}
 	});
 	if (routes) {
-		validateRoutes(routes, Boolean(args.assets || config.assets));
+		const assetOptions = getAssetsOptions({ assets: args.assets }, config);
+		validateRoutes(routes, assetOptions);
 	}
 	return { host, routes };
 }
