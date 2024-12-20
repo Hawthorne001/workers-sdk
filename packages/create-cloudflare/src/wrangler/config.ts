@@ -31,7 +31,7 @@ export const updateWranglerToml = async (ctx: C3Context) => {
 		}
 	} else {
 		newToml.prepend(
-			`compatibility_date = "${await getWorkerdCompatibilityDate()}"`,
+			`compatibility_date = "${await getWorkerdCompatibilityDate()}"\n`,
 		);
 	}
 
@@ -39,7 +39,7 @@ export const updateWranglerToml = async (ctx: C3Context) => {
 	if (wranglerToml.match(nameRe)) {
 		newToml.replace(nameRe, `name = "${ctx.project.name}"`);
 	} else {
-		newToml.prepend(`name = "${ctx.project.name}"`);
+		newToml.prepend(`name = "${ctx.project.name}"\n`);
 	}
 
 	writeWranglerToml(ctx, newToml.toString());
@@ -49,14 +49,37 @@ const getWranglerTomlPath = (ctx: C3Context) => {
 	return resolve(ctx.project.path, "wrangler.toml");
 };
 
+const getWranglerJsonPath = (ctx: C3Context) => {
+	return resolve(ctx.project.path, "wrangler.json");
+};
+
+const getWranglerJsoncPath = (ctx: C3Context) => {
+	return resolve(ctx.project.path, "wrangler.jsonc");
+};
+
 export const wranglerTomlExists = (ctx: C3Context) => {
 	const wranglerTomlPath = getWranglerTomlPath(ctx);
 	return existsSync(wranglerTomlPath);
 };
 
+export const wranglerJsonExists = (ctx: C3Context) => {
+	const wranglerJsonPath = getWranglerJsonPath(ctx);
+	const wranglerJsoncPath = getWranglerJsoncPath(ctx);
+	return existsSync(wranglerJsonPath) || existsSync(wranglerJsoncPath);
+};
+
 export const readWranglerToml = (ctx: C3Context) => {
 	const wranglerTomlPath = getWranglerTomlPath(ctx);
 	return readFile(wranglerTomlPath);
+};
+
+export const readWranglerJson = (ctx: C3Context) => {
+	const wranglerJsonPath = getWranglerJsonPath(ctx);
+	if (existsSync(wranglerJsonPath)) {
+		return readFile(wranglerJsonPath);
+	}
+	const wranglerJsoncPath = getWranglerJsoncPath(ctx);
+	return readFile(wranglerJsoncPath);
 };
 
 export const writeWranglerToml = (ctx: C3Context, contents: string) => {

@@ -4,6 +4,7 @@ import TOML from "@iarna/toml";
 import { dedent } from "ts-dedent";
 import { UserError } from "../errors";
 import { getFlag } from "../experimental-flags";
+import { friendlyBindingNames } from "../utils/print-bindings";
 import { Diagnostics } from "./diagnostics";
 import {
 	all,
@@ -32,7 +33,7 @@ import {
 	validateRequiredProperty,
 	validateTypedArray,
 } from "./validation-helpers";
-import { configFileName, formatConfigSnippet, friendlyBindingNames } from ".";
+import { configFileName, formatConfigSnippet } from ".";
 import type {
 	CreateApplicationRequest,
 	UserDeploymentConfiguration,
@@ -224,7 +225,7 @@ export function normalizeAndValidateConfig(
 			activeEnv = normalizeAndValidateEnvironment(
 				envDiagnostics,
 				configPath,
-				{},
+				topLevelEnv, // in this case reuse the topLevelEnv to ensure that nonInherited fields are not removed
 				isDispatchNamespace,
 				envName,
 				topLevelEnv,
