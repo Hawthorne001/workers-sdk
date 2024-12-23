@@ -18,7 +18,10 @@ const generate = async (ctx: C3Context) => {
 };
 
 const configure = async () => {
-	const packages = ["@opennextjs/cloudflare", "@cloudflare/workers-types"];
+	const packages = [
+		"@opennextjs/cloudflare@0.2.x",
+		"@cloudflare/workers-types",
+	];
 	await installPackages(packages, {
 		dev: true,
 		startText: "Adding the Cloudflare adapter",
@@ -30,6 +33,10 @@ export default {
 	configVersion: 1,
 	id: "next",
 	frameworkCli: "create-next-app",
+	// TODO: here we need to specify a version of create-next-app which is different from the
+	//       standard one used in the stable Next.js template, that's because our open-next adapter
+	//       is not yet fully ready for Next.js 15, once it is we should remove the following
+	frameworkCliPinnedVersion: "14.2.5",
 	platform: "workers",
 	displayName: "Next (using Node.js compat + Workers Assets)",
 	path: "templates-experimental/next",

@@ -10,7 +10,7 @@ import {
 	isLegacyEnv,
 } from "../..";
 import { getAssetsOptions, validateAssetsArgsAndConfig } from "../../assets";
-import { printBindings, readConfig } from "../../config";
+import { readConfig } from "../../config";
 import { getEntry } from "../../deployment-bundle/entry";
 import {
 	getBindings,
@@ -24,6 +24,7 @@ import { UserError } from "../../errors";
 import { logger } from "../../logger";
 import { requireApiToken, requireAuth } from "../../user";
 import { memoizeGetPort } from "../../utils/memoizeGetPort";
+import { printBindings } from "../../utils/print-bindings";
 import { getZoneIdForPreview } from "../../zones";
 import { Controller } from "./BaseController";
 import { castErrorCause } from "./events";
@@ -311,12 +312,6 @@ async function resolveConfig(
 	if (resolved.legacy.legacyAssets && resolved.legacy.site) {
 		throw new UserError(
 			"Cannot use legacy assets and Workers Sites in the same Worker."
-		);
-	}
-
-	if (resolved.assets && resolved.dev.remote) {
-		throw new UserError(
-			"Cannot use assets in remote mode. Workers with assets are only supported in local mode. Please use `wrangler dev`."
 		);
 	}
 
